@@ -1,3 +1,8 @@
+# ── Project Network Tier ─────────────────────────────────────────────────────
+resource "google_compute_project_default_network_tier" "default" {
+  network_tier = "STANDARD"
+}
+
 # ── VPC ──────────────────────────────────────────────────────────────────────
 resource "google_compute_network" "vpc" {
   name                    = "n8n-vpc"
@@ -15,20 +20,6 @@ resource "google_compute_subnetwork" "subnet" {
 
 # ── Firewall Rules ────────────────────────────────────────────────────────────
 
-# SSH access
-resource "google_compute_firewall" "allow_ssh" {
-  name    = "n8n-allow-ssh"
-  network = google_compute_network.vpc.name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-
-  source_ranges = var.allowed_ssh_cidrs
-  target_tags   = ["k3s-node"]
-}
-
 # k3s API server (kubectl access)
 resource "google_compute_firewall" "allow_k3s_api" {
   name    = "n8n-allow-k3s-api"
@@ -40,7 +31,7 @@ resource "google_compute_firewall" "allow_k3s_api" {
   }
 
   source_ranges = var.allowed_k3s_api_cidrs
-  target_tags   = ["k3s-server"]
+  target_tags   = ["gke-n8n-node"]
 }
 
 # HTTP/HTTPS for n8n ingress
@@ -54,7 +45,7 @@ resource "google_compute_firewall" "allow_web" {
   }
 
   source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["k3s-node"]
+  target_tags   = ["gke-n8n-node"]
 }
 
 # Inter-node communication (k3s flannel, etcd, etc.)
@@ -75,7 +66,7 @@ resource "google_compute_firewall" "allow_internal" {
   }
 
   source_ranges = ["10.10.0.0/24"]
-  target_tags   = ["k3s-node"]
+  target_tags   = ["gke-n8n-node"]
 }
 
 # GCP health check probes (for load balancer)
@@ -88,5 +79,5 @@ resource "google_compute_firewall" "allow_health_checks" {
   }
 
   source_ranges = ["35.191.0.0/16", "130.211.0.0/22"]
-  target_tags   = ["k3s-node"]
+  target_tags   = ["gke-n8n-node"]
 }

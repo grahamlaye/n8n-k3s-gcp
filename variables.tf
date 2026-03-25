@@ -22,12 +22,6 @@ variable "gke_version" {
   default     = "STABLE"
 }
 
-variable "allowed_ssh_cidrs" {
-  description = "CIDR ranges allowed to SSH into nodes"
-  type        = list(string)
-  default     = ["0.0.0.0/0"] # Override in terraform.tfvars with your IP
-}
-
 variable "allowed_k3s_api_cidrs" {
   description = "CIDR ranges allowed to reach the k3s API (kubectl)"
   type        = list(string)

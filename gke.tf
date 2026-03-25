@@ -3,9 +3,10 @@
 # No node pool resource needed.
 resource "google_container_cluster" "primary" {
   name     = "n8n-cluster"
-  location = var.zone
+  location = var.region
 
-  enable_autopilot = true
+  enable_autopilot    = true
+  deletion_protection = false
 
   network    = google_compute_network.vpc.self_link
   subnetwork = google_compute_subnetwork.subnet.self_link
