@@ -1,12 +1,11 @@
-# ── GKE Autopilot Cluster ─────────────────────────────────────────────────────
-# Autopilot manages nodes automatically — we only pay for pod resource requests.
-# No node pool resource needed.
+# ── GKE Standard Cluster ──────────────────────────────────────────────────────
 resource "google_container_cluster" "primary" {
   name     = "n8n-cluster"
-  location = var.region
+  location = var.zone
 
-  enable_autopilot    = true
-  deletion_protection = false
+  # We manage the node pool separately for full control
+  remove_default_node_pool = true
+  initial_node_count       = 1
 
   network    = google_compute_network.vpc.self_link
   subnetwork = google_compute_subnetwork.subnet.self_link
@@ -18,7 +17,7 @@ resource "google_container_cluster" "primary" {
   # Private cluster — nodes get no public IPs
   private_cluster_config {
     enable_private_nodes    = true
-    enable_private_endpoint = false # Keep public endpoint so kubectl works from your machine
+    enable_private_endpoint = false
     master_ipv4_cidr_block  = "172.16.0.0/28"
   }
 
@@ -38,7 +37,7 @@ resource "google_container_cluster" "primary" {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
 
-  # Disable Managed Prometheus — saves cost, we don't need it for a demo
+  # Disable Managed Prometheus — we'll run our own
   monitoring_config {
     enable_components = ["SYSTEM_COMPONENTS"]
     managed_prometheus {
@@ -46,8 +45,44 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  # Reduce logging to system components only — no workload log ingestion costs
+  # Reduce logging to system components only
   logging_config {
     enable_components = ["SYSTEM_COMPONENTS"]
+  }
+
+  deletion_protection = false
+}
+
+# ── Node Pool ─────────────────────────────────────────────────────────────────
+resource "google_container_node_pool" "primary_nodes" {
+  name     = "n8n-node-pool"
+  location = var.zone
+  cluster  = google_container_cluster.primary.name
+
+  # Cluster autoscaler — idles at 1 node, scales to 3 under load
+  autoscaling {
+    min_node_count = var.min_node_count
+    max_node_count = var.max_node_count
+  }
+
+  node_config {
+    machine_type = var.machine_type
+    disk_size_gb = 50
+    disk_type    = "pd-standard"
+
+    workload_metadata_config {
+      mode = "GKE_METADATA"
+    }
+
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+
+    tags = ["gke-n8n-node"]
+  }
+
+  management {
+    auto_repair  = true
+    auto_upgrade = true
   }
 }

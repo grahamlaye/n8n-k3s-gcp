@@ -18,6 +18,21 @@ resource "google_compute_subnetwork" "subnet" {
   private_ip_google_access = true
 }
 
+# ── Private Services Access (required for Cloud SQL private IP) ───────────────
+resource "google_compute_global_address" "private_services_range" {
+  name          = "n8n-private-services-range"
+  purpose       = "VPC_PEERING"
+  address_type  = "INTERNAL"
+  prefix_length = 16
+  network       = google_compute_network.vpc.id
+}
+
+resource "google_service_networking_connection" "private_vpc_connection" {
+  network                 = google_compute_network.vpc.id
+  service                 = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [google_compute_global_address.private_services_range.name]
+}
+
 # ── Firewall Rules ────────────────────────────────────────────────────────────
 
 # k3s API server (kubectl access)
