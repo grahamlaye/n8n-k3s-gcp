@@ -1,7 +1,7 @@
 variable "project_id" {
   description = "GCP Project ID"
   type        = string
-  default     = "260949299205"
+  default     = "n8n-demo-lab"
 }
 
 variable "region" {
@@ -28,20 +28,32 @@ variable "node_count" {
   default     = 2
 }
 
-variable "k3s_version" {
-  description = "K3s version to install"
+variable "gke_version" {
+  description = "GKE release channel"
   type        = string
-  default     = "v1.29.3+k3s1"
+  default     = "STABLE"
 }
 
-variable "ssh_user" {
-  description = "SSH username for GCE instances"
-  type        = string
-  default     = "ubuntu"
+variable "min_node_count" {
+  description = "Minimum nodes per zone (autoscaling)"
+  type        = number
+  default     = 1
 }
 
-variable "ssh_pub_key_path" {
-  description = "Path to SSH public key"
-  type        = string
-  default     = "~/.ssh/id_rsa.pub"
+variable "max_node_count" {
+  description = "Maximum nodes per zone (autoscaling)"
+  type        = number
+  default     = 3
+}
+
+variable "allowed_ssh_cidrs" {
+  description = "CIDR ranges allowed to SSH into nodes"
+  type        = list(string)
+  default     = ["0.0.0.0/0"] # Override in terraform.tfvars with your IP
+}
+
+variable "allowed_k3s_api_cidrs" {
+  description = "CIDR ranges allowed to reach the k3s API (kubectl)"
+  type        = list(string)
+  default     = ["0.0.0.0/0"] # Override in terraform.tfvars with your IP
 }
