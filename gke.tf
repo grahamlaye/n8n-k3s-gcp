@@ -37,4 +37,17 @@ resource "google_container_cluster" "primary" {
   workload_identity_config {
     workload_pool = "${var.project_id}.svc.id.goog"
   }
+
+  # Disable Managed Prometheus — saves cost, we don't need it for a demo
+  monitoring_config {
+    enable_components = ["SYSTEM_COMPONENTS"]
+    managed_prometheus {
+      enabled = false
+    }
+  }
+
+  # Reduce logging to system components only — no workload log ingestion costs
+  logging_config {
+    enable_components = ["SYSTEM_COMPONENTS"]
+  }
 }
