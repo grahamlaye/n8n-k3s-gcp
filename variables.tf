@@ -55,5 +55,5 @@ variable "db_version" {
 variable "allowed_k3s_api_cidrs" {
   description = "CIDR ranges allowed to reach the k3s API (kubectl)"
   type        = list(string)
-  default     = ["0.0.0.0/0"] # Override in terraform.tfvars with your IP
+  default     = ["82.14.69.238/32"]
 }

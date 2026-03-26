@@ -71,6 +71,8 @@ spec:
                 secretKeyRef:
                   name: n8n-secret
                   key: N8N_ENCRYPTION_KEY
+            - name: WEBHOOK_URL
+              value: "https://n8n.gbone.one"
             # Task runners — external mode with Python support
             - name: N8N_RUNNERS_ENABLED
               value: "true"
