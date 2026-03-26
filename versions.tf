@@ -7,6 +7,11 @@ terraform {
       version = "~> 6.0"
     }
   }
+
+  backend "gcs" {
+    bucket = "n8n-demo-lab-tfstate"
+    prefix = "terraform/state"
+  }
 }
 
 provider "google" {
