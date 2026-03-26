@@ -33,15 +33,24 @@ spec:
           ports:
             - containerPort: 5678
           env:
-            # Database — Cloud SQL via private IP
+            # Database — Cloud SQL, IP sourced from ConfigMap managed by Terraform
             - name: DB_TYPE
               value: postgresdb
             - name: DB_POSTGRESDB_HOST
-              value: "10.179.0.3"
+              valueFrom:
+                configMapKeyRef:
+                  name: n8n-config
+                  key: DB_POSTGRESDB_HOST
             - name: DB_POSTGRESDB_PORT
-              value: "5432"
+              valueFrom:
+                configMapKeyRef:
+                  name: n8n-config
+                  key: DB_POSTGRESDB_PORT
             - name: DB_POSTGRESDB_DATABASE
-              value: n8n
+              valueFrom:
+                configMapKeyRef:
+                  name: n8n-config
+                  key: DB_POSTGRESDB_DATABASE
             - name: DB_POSTGRESDB_USER
               valueFrom:
                 secretKeyRef:
