@@ -48,6 +48,14 @@ resource "google_compute_router_nat" "nat" {
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
 
+# ── Static External IP (Traefik ingress) ─────────────────────────────────────
+resource "google_compute_address" "traefik_ingress" {
+  name         = "traefik-ingress-ip"
+  region       = var.region
+  network_tier = "PREMIUM"
+  address      = "34.105.214.176"
+}
+
 # ── Firewall Rules ────────────────────────────────────────────────────────────
 
 # k3s API server (kubectl access)
@@ -74,7 +82,7 @@ resource "google_compute_firewall" "allow_web" {
     ports    = ["80", "443"]
   }
 
-  source_ranges = ["0.0.0.0/0"]
+  source_ranges = var.allowed_web_cidrs
   target_tags   = ["gke-n8n-node"]
 }
 
