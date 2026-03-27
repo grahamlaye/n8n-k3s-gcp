@@ -17,6 +17,7 @@ spec:
       labels:
         service: n8n
     spec:
+      serviceAccountName: cloudsql-proxy
       initContainers:
         - name: volume-permissions
           image: busybox:1.36
@@ -117,6 +118,24 @@ spec:
             limits:
               memory: "500Mi"
               cpu: "500m"
+
+        # ── Cloud SQL Auth Proxy sidecar ──────────────────────────────────────
+        # Connects to Cloud SQL via instance name — IP changes are transparent.
+        - name: cloudsql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
+          args:
+            - "--structured-logs"
+            - "--port=5432"
+            - "n8n-demo-lab:europe-west2:n8n-postgres"
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"
+          securityContext:
+            runAsNonRoot: true
 
       restartPolicy: Always
       volumes:

@@ -40,12 +40,6 @@ variable "gke_version" {
   default     = "STABLE"
 }
 
-variable "db_password" {
-  description = "Password for the n8n Cloud SQL user"
-  type        = string
-  sensitive   = true
-}
-
 variable "db_version" {
   description = "Cloud SQL Postgres version"
   type        = string
