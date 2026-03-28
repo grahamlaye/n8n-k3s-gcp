@@ -126,6 +126,7 @@ spec:
           args:
             - "--structured-logs"
             - "--port=5432"
+            - "--private-ip"
             - "n8n-demo-lab:europe-west2:n8n-postgres"
           resources:
             requests:

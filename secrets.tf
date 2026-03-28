@@ -43,6 +43,11 @@ data "google_secret_manager_secret_version" "affine_admin_password" {
   project = var.project_id
 }
 
+data "google_secret_manager_secret_version" "affine_basic_auth" {
+  secret  = "affine-basic-auth"
+  project = var.project_id
+}
+
 # ── K8s Secrets — owned by Terraform ─────────────────────────────────────────
 # If a secret is accidentally deleted from the cluster, tf apply restores it.
 
@@ -100,6 +105,19 @@ resource "kubernetes_secret" "affine_secret" {
     NEXTAUTH_SECRET      = data.google_secret_manager_secret_version.affine_nextauth_secret.secret_data
     AFFINE_ADMIN_EMAIL   = data.google_secret_manager_secret_version.affine_admin_email.secret_data
     AFFINE_ADMIN_PASSWORD = data.google_secret_manager_secret_version.affine_admin_password.secret_data
+  }
+
+  depends_on = [kubernetes_namespace.affine]
+}
+
+resource "kubernetes_secret" "affine_basic_auth" {
+  metadata {
+    name      = "affine-basic-auth"
+    namespace = "affine"
+  }
+
+  data = {
+    users = data.google_secret_manager_secret_version.affine_basic_auth.secret_data
   }
 
   depends_on = [kubernetes_namespace.affine]

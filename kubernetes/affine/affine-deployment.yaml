@@ -18,10 +18,79 @@ spec:
         service: affine
     spec:
       serviceAccountName: cloudsql-proxy
+      initContainers:
+        # ── Cloud SQL Auth Proxy (native sidecar) ─────────────────────────────
+        # restartPolicy: Always makes this a K8s native sidecar — it starts
+        # before all other init containers and keeps running for the pod lifetime.
+        - name: cloudsql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
+          restartPolicy: Always
+          args:
+            - "--structured-logs"
+            - "--port=5432"
+            - "--private-ip"
+            - "n8n-demo-lab:europe-west2:n8n-postgres"
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"
+          securityContext:
+            runAsNonRoot: true
+
+        # ── Migration init container ───────────────────────────────────────────
+        # Runs DB schema migrations before the main app starts.
+        # Equivalent to the affine_migration service in the official docker-compose.
+        - name: affine-migration
+          image: ghcr.io/toeverything/affine:stable
+          command: ["node", "./scripts/self-host-predeploy.js"]
+          env:
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: affine-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: affine-config
+                  key: DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: affine-config
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: affine-config
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: affine-secret
+                  key: DB_PASSWORD
+            - name: DATABASE_URL
+              value: "postgresql://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)"
+            - name: REDIS_SERVER_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: affine-config
+                  key: REDIS_SERVER_HOST
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
       containers:
         # ── Affine main container ──────────────────────────────────────────────
         - name: affine
-          image: ghcr.io/toeverything/affine-graphql:stable
+          image: ghcr.io/toeverything/affine:stable
           ports:
             - containerPort: 3010
           env:
@@ -106,24 +175,6 @@ spec:
           volumeMounts:
             - name: affine-claim0
               mountPath: /root/.affine/storage
-
-        # ── Cloud SQL Auth Proxy sidecar ───────────────────────────────────────
-        # Connects to Cloud SQL via instance name — IP changes are transparent.
-        - name: cloudsql-proxy
-          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
-          args:
-            - "--structured-logs"
-            - "--port=5432"
-            - "n8n-demo-lab:europe-west2:n8n-postgres"
-          resources:
-            requests:
-              memory: "32Mi"
-              cpu: "10m"
-            limits:
-              memory: "64Mi"
-              cpu: "100m"
-          securityContext:
-            runAsNonRoot: true
 
       restartPolicy: Always
       volumes:

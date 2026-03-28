@@ -49,7 +49,7 @@ variable "db_version" {
 variable "allowed_k3s_api_cidrs" {
   description = "CIDR ranges allowed to reach the k3s API (kubectl)"
   type        = list(string)
-  default     = ["82.14.69.238/32"]
+  default     = ["82.14.69.238/32", "150.228.9.108/32"]
 }
 
 variable "allowed_web_cidrs" {

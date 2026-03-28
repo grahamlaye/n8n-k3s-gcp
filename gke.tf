@@ -23,9 +23,12 @@ resource "google_container_cluster" "primary" {
 
   # Lock down who can reach the GKE API
   master_authorized_networks_config {
-    cidr_blocks {
-      cidr_block   = var.allowed_k3s_api_cidrs[0]
-      display_name = "allowed-kubectl-access"
+    dynamic "cidr_blocks" {
+      for_each = var.allowed_k3s_api_cidrs
+      content {
+        cidr_block   = cidr_blocks.value
+        display_name = "allowed-kubectl-access-${cidr_blocks.key}"
+      }
     }
   }
 
