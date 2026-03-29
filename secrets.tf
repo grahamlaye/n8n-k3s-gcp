@@ -48,6 +48,11 @@ data "google_secret_manager_secret_version" "affine_basic_auth" {
   project = var.project_id
 }
 
+data "google_secret_manager_secret_version" "cloudflare_api_token" {
+  secret  = "cloudflare-api-token"
+  project = var.project_id
+}
+
 # ── K8s Secrets — owned by Terraform ─────────────────────────────────────────
 # If a secret is accidentally deleted from the cluster, tf apply restores it.
 

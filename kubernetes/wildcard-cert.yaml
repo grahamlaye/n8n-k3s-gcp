@@ -1,0 +1,26 @@
+# ── Wildcard TLS Certificate ───────────────────────────────────────────────────
+# Single *.gbone.one cert in the traefik namespace.
+# Traefik TLSStore default picks it up — all HTTPS routes use it automatically.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-gbone-one
+  namespace: traefik
+spec:
+  secretName: wildcard-gbone-one-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.gbone.one"
+---
+# ── Traefik Default TLS Store ──────────────────────────────────────────────────
+# "default" is the reserved name Traefik uses for all routes without an explicit cert.
+apiVersion: traefik.io/v1alpha1
+kind: TLSStore
+metadata:
+  name: default
+  namespace: traefik
+spec:
+  defaultCertificate:
+    secretName: wildcard-gbone-one-tls

@@ -47,9 +47,11 @@ variable "db_version" {
 }
 
 variable "allowed_k3s_api_cidrs" {
-  description = "CIDR ranges allowed to reach the k3s API (kubectl)"
+  description = "CIDR ranges allowed to reach the GKE API (kubectl)"
   type        = list(string)
-  default     = ["82.14.69.238/32", "150.228.9.108/32"]
+  default     = [
+    "35.214.53.241/32", # GKE NAT egress — WARP kubectl traffic exits here
+  ]
 }
 
 variable "allowed_web_cidrs" {
