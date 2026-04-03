@@ -1,0 +1,39 @@
+# kube-prometheus-stack Helm values
+# Installs Prometheus, Grafana, and Alertmanager
+
+grafana:
+  # Use secret created via CLI — never hardcode credentials
+  admin:
+    existingSecret: grafana-admin-secret
+    userKey: admin-user
+    passwordKey: admin-password
+
+  # ClusterIP only — Traefik handles ingress
+  service:
+    type: ClusterIP
+
+  # Persist dashboards and config
+  persistence:
+    enabled: true
+    size: 2Gi
+
+prometheus:
+  prometheusSpec:
+    # Retain 15 days of metrics
+    retention: 15d
+
+    # Persist metrics data
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+  service:
+    type: ClusterIP
+
+alertmanager:
+  service:
+    type: ClusterIP
