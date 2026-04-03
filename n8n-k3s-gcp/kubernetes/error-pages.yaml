@@ -1,0 +1,355 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: error-pages
+  namespace: default
+data:
+  nginx.conf: |
+    server {
+      listen 80;
+      root /usr/share/nginx/html;
+      location / {
+        try_files $uri /404.html =200;
+      }
+    }
+  404.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <title>404 — Gone Gnome Fishing</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+          background: #0f1117;
+          color: #e2e8f0;
+          font-family: 'Segoe UI', system-ui, sans-serif;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          overflow: hidden;
+        }
+
+        .scene {
+          position: relative;
+          width: 420px;
+          text-align: center;
+        }
+
+        /* Water */
+        .water {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 90px;
+          background: linear-gradient(180deg, #1a3a5c 0%, #0d2137 100%);
+          border-radius: 0 0 16px 16px;
+          overflow: hidden;
+        }
+
+        .wave {
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 300%;
+          height: 18px;
+          background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 18'%3E%3Cpath d='M0 9 Q150 0 300 9 Q450 18 600 9 Q750 0 900 9 Q1050 18 1200 9 V18 H0Z' fill='%231e4976'/%3E%3C/svg%3E") repeat-x;
+          animation: wave 3s linear infinite;
+        }
+
+        .wave2 {
+          top: 6px;
+          animation: wave 5s linear infinite reverse;
+          opacity: 0.5;
+        }
+
+        @keyframes wave {
+          from { transform: translateX(0); }
+          to   { transform: translateX(33.33%); }
+        }
+
+        /* Bobber */
+        .bobber {
+          position: absolute;
+          bottom: 50px;
+          left: 58%;
+          animation: bob 2s ease-in-out infinite;
+        }
+
+        .bobber-top {
+          width: 14px;
+          height: 14px;
+          background: #ef4444;
+          border-radius: 50% 50% 0 0;
+          margin: 0 auto;
+        }
+
+        .bobber-bottom {
+          width: 14px;
+          height: 14px;
+          background: #f8fafc;
+          border-radius: 0 0 50% 50%;
+          margin: 0 auto;
+        }
+
+        @keyframes bob {
+          0%, 100% { transform: translateY(0); }
+          50%       { transform: translateY(6px); }
+        }
+
+        /* Fishing line */
+        .line-svg {
+          position: absolute;
+          top: 60px;
+          left: 185px;
+          pointer-events: none;
+        }
+
+        /* Scene box */
+        .scene-box {
+          background: #1a1f2e;
+          border: 1px solid #2d3748;
+          border-radius: 16px;
+          padding: 40px 40px 110px;
+          position: relative;
+          min-height: 340px;
+        }
+
+        /* Gnome SVG */
+        .gnome {
+          width: 140px;
+          margin: 0 auto 8px;
+          display: block;
+        }
+
+        /* Text */
+        .error-code {
+          font-size: 5rem;
+          font-weight: 800;
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          line-height: 1;
+          margin-bottom: 8px;
+        }
+
+        h1 {
+          font-size: 1.4rem;
+          font-weight: 600;
+          color: #cbd5e1;
+          margin-bottom: 12px;
+        }
+
+        .quip {
+          font-size: 0.95rem;
+          color: #64748b;
+          line-height: 1.6;
+          margin-bottom: 28px;
+        }
+
+        .quip em {
+          color: #8b5cf6;
+          font-style: normal;
+        }
+
+        .home-btn {
+          display: inline-block;
+          padding: 10px 28px;
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          color: #fff;
+          text-decoration: none;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.9rem;
+          transition: opacity 0.2s;
+        }
+
+        .home-btn:hover { opacity: 0.85; }
+
+        .stars {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: -1;
+        }
+
+        .star {
+          position: absolute;
+          width: 2px;
+          height: 2px;
+          background: #fff;
+          border-radius: 50%;
+          opacity: 0;
+          animation: twinkle var(--d) var(--delay) ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+          0%, 100% { opacity: 0; }
+          50%       { opacity: var(--o); }
+        }
+      </style>
+    </head>
+    <body>
+
+      <!-- Starfield -->
+      <div class="stars" id="stars"></div>
+
+      <div class="scene">
+        <div class="scene-box">
+
+          <!-- Gnome SVG -->
+          <svg class="gnome" viewBox="0 0 140 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Hat -->
+            <polygon points="70,10 40,90 100,90" fill="#8b5cf6"/>
+            <polygon points="70,10 45,75 95,75" fill="#7c3aed"/>
+            <!-- Hat brim -->
+            <ellipse cx="70" cy="90" rx="32" ry="8" fill="#6d28d9"/>
+            <!-- Face -->
+            <ellipse cx="70" cy="108" rx="24" ry="20" fill="#fde68a"/>
+            <!-- Nose (big gnome nose) -->
+            <ellipse cx="70" cy="113" rx="10" ry="8" fill="#fbbf24"/>
+            <!-- Eyes -->
+            <circle cx="61" cy="104" r="3" fill="#1e293b"/>
+            <circle cx="79" cy="104" r="3" fill="#1e293b"/>
+            <!-- Eye shine -->
+            <circle cx="62" cy="103" r="1" fill="#fff"/>
+            <circle cx="80" cy="103" r="1" fill="#fff"/>
+            <!-- Beard -->
+            <ellipse cx="70" cy="128" rx="26" ry="18" fill="#f1f5f9"/>
+            <ellipse cx="58" cy="134" rx="10" ry="12" fill="#e2e8f0"/>
+            <ellipse cx="82" cy="134" rx="10" ry="12" fill="#e2e8f0"/>
+            <!-- Body -->
+            <rect x="46" y="138" width="48" height="44" rx="8" fill="#4f46e5"/>
+            <!-- Belt -->
+            <rect x="46" y="158" width="48" height="8" fill="#1e1b4b"/>
+            <rect x="64" y="156" width="12" height="12" rx="2" fill="#fbbf24"/>
+            <!-- Legs -->
+            <rect x="50" y="178" width="16" height="18" rx="4" fill="#312e81"/>
+            <rect x="74" y="178" width="16" height="18" rx="4" fill="#312e81"/>
+            <!-- Boots -->
+            <ellipse cx="58" cy="196" rx="10" ry="5" fill="#1e1b4b"/>
+            <ellipse cx="82" cy="196" rx="10" ry="5" fill="#1e1b4b"/>
+            <!-- Fishing rod arm -->
+            <line x1="94" y1="148" x2="136" y2="88" stroke="#92400e" stroke-width="4" stroke-linecap="round"/>
+            <!-- Hand -->
+            <circle cx="94" cy="150" r="6" fill="#fde68a"/>
+          </svg>
+
+          <!-- Fishing line (SVG overlay) -->
+          <svg class="line-svg" width="60" height="80" viewBox="0 0 60 80">
+            <path d="M 0 0 Q 30 20 44 78" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="4 2"/>
+          </svg>
+
+          <div class="error-code">404</div>
+          <h1>Gone Gnome Fishing</h1>
+          <p class="quip">
+            This page packed up its pointy hat, grabbed its rod,<br/>
+            and sailed off into <em>gbone.one</em> knows where.<br/>
+            Even the gnome couldn't find it.
+          </p>
+          <a class="home-btn" href="https://www.dummies.com" target="_blank" rel="noopener">I need the internet explained to me</a>
+
+          <!-- Water + bobber -->
+          <div class="water">
+            <div class="wave"></div>
+            <div class="wave wave2"></div>
+            <div class="bobber">
+              <div class="bobber-top"></div>
+              <div class="bobber-bottom"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <script>
+        // Generate starfield
+        const stars = document.getElementById('stars');
+        for (let i = 0; i < 80; i++) {
+          const s = document.createElement('div');
+          s.className = 'star';
+          s.style.cssText = `
+            left:${Math.random()*100}%;
+            top:${Math.random()*100}%;
+            --d:${2+Math.random()*4}s;
+            --delay:${Math.random()*4}s;
+            --o:${0.3+Math.random()*0.7};
+          `;
+          stars.appendChild(s);
+        }
+      </script>
+    </body>
+    </html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: error-pages
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: error-pages
+  template:
+    metadata:
+      labels:
+        app: error-pages
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: pages
+              mountPath: /usr/share/nginx/html
+            - name: pages
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: nginx.conf
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+            limits:
+              memory: "64Mi"
+              cpu: "50m"
+      volumes:
+        - name: pages
+          configMap:
+            name: error-pages
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: error-pages
+  namespace: default
+spec:
+  selector:
+    app: error-pages
+  ports:
+    - port: 80
+      targetPort: 80
+---
+# Catch-all: any *.gbone.one subdomain not matched by a real route
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: catchall-error-page
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: HostRegexp(`^.+\.gbone\.one$`)
+      kind: Rule
+      priority: 1
+      services:
+        - name: error-pages
+          port: 80

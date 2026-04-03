@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n
+  namespace: n8n
+  labels:
+    service: n8n
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: n8n
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        service: n8n
+    spec:
+      serviceAccountName: cloudsql-proxy
+      initContainers:
+        - name: volume-permissions
+          image: busybox:1.36
+          command: ["sh", "-c", "chown 1000:1000 /data"]
+          volumeMounts:
+            - name: n8n-claim0
+              mountPath: /data
+      containers:
+        # ── n8n main container ────────────────────────────────────────────────
+        - name: n8n
+          image: n8nio/n8n:2.13.3
+          command: ["/bin/sh"]
+          args: ["-c", "sleep 5; n8n start"]
+          ports:
+            - containerPort: 5678
+          env:
+            # Database — Cloud SQL, IP sourced from ConfigMap managed by Terraform
+            - name: DB_TYPE
+              value: postgresdb
+            - name: DB_POSTGRESDB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: n8n-config
+                  key: DB_POSTGRESDB_HOST
+            - name: DB_POSTGRESDB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: n8n-config
+                  key: DB_POSTGRESDB_PORT
+            - name: DB_POSTGRESDB_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: n8n-config
+                  key: DB_POSTGRESDB_DATABASE
+            - name: DB_POSTGRESDB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_NON_ROOT_USER
+            - name: DB_POSTGRESDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_NON_ROOT_PASSWORD
+            # n8n config
+            - name: N8N_PROTOCOL
+              value: http
+            - name: N8N_PORT
+              value: "5678"
+            - name: N8N_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-secret
+                  key: N8N_ENCRYPTION_KEY
+            - name: WEBHOOK_URL
+              value: "https://n8n.gbone.one"
+            # Task runners — external mode with Python support
+            - name: N8N_RUNNERS_ENABLED
+              value: "true"
+            - name: N8N_RUNNERS_MODE
+              value: external
+            - name: N8N_RUNNERS_BROKER_LISTEN_ADDRESS
+              value: "0.0.0.0"
+            - name: N8N_NATIVE_PYTHON_RUNNER
+              value: "true"
+            - name: N8N_RUNNERS_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-runners-secret
+                  key: N8N_RUNNERS_AUTH_TOKEN
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: gemini-api-key
+                  key: api-key
+            - name: N8N_BLOCK_ENV_ACCESS_IN_NODE
+              value: "false"
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu: "200m"
+            limits:
+              memory: "2000Mi"
+              cpu: "2000m"
+          volumeMounts:
+            - name: n8n-claim0
+              mountPath: /home/node/.n8n
+
+        # ── task runners sidecar ──────────────────────────────────────────────
+        # Image version must match n8n exactly
+        - name: n8n-runners
+          image: n8nio/runners:2.13.3
+          env:
+            - name: N8N_RUNNERS_TASK_BROKER_URI
+              value: "http://localhost:5679"
+            - name: N8N_RUNNERS_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-runners-secret
+                  key: N8N_RUNNERS_AUTH_TOKEN
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu: "200m"
+            limits:
+              memory: "1000Mi"
+              cpu: "1000m"
+
+        # ── Cloud SQL Auth Proxy sidecar ──────────────────────────────────────
+        # Connects to Cloud SQL via instance name — IP changes are transparent.
+        - name: cloudsql-proxy
+          image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2
+          args:
+            - "--structured-logs"
+            - "--port=5432"
+            - "--private-ip"
+            - "n8n-demo-lab:europe-west2:n8n-postgres"
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"
+          securityContext:
+            runAsNonRoot: true
+
+      restartPolicy: Always
+      volumes:
+        - name: n8n-claim0
+          persistentVolumeClaim:
+            claimName: n8n-claim0
