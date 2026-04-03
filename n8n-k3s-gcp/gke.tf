@@ -70,7 +70,7 @@ resource "google_container_node_pool" "primary_nodes" {
 
   node_config {
     machine_type = var.machine_type
-    disk_size_gb = 50
+    disk_size_gb = 30
     disk_type    = "pd-standard"
 
     workload_metadata_config {
