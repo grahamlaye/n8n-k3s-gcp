@@ -48,14 +48,6 @@ resource "google_compute_router_nat" "nat" {
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
 }
 
-# ── Static External IP (Traefik ingress) ─────────────────────────────────────
-resource "google_compute_address" "traefik_ingress" {
-  name         = "traefik-ingress-ip"
-  region       = var.region
-  network_tier = "PREMIUM"
-  address      = "34.105.214.176"
-}
-
 # ── Firewall Rules ────────────────────────────────────────────────────────────
 
 # k3s API server (kubectl access)
@@ -69,20 +61,6 @@ resource "google_compute_firewall" "allow_k3s_api" {
   }
 
   source_ranges = var.allowed_k3s_api_cidrs
-  target_tags   = ["gke-n8n-node"]
-}
-
-# HTTP/HTTPS for n8n ingress
-resource "google_compute_firewall" "allow_web" {
-  name    = "n8n-allow-web"
-  network = google_compute_network.vpc.name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["80", "443"]
-  }
-
-  source_ranges = var.allowed_web_cidrs
   target_tags   = ["gke-n8n-node"]
 }
 
@@ -104,18 +82,5 @@ resource "google_compute_firewall" "allow_internal" {
   }
 
   source_ranges = ["10.10.0.0/24"]
-  target_tags   = ["gke-n8n-node"]
-}
-
-# GCP health check probes (for load balancer)
-resource "google_compute_firewall" "allow_health_checks" {
-  name    = "n8n-allow-health-checks"
-  network = google_compute_network.vpc.name
-
-  allow {
-    protocol = "tcp"
-  }
-
-  source_ranges = ["35.191.0.0/16", "130.211.0.0/22"]
   target_tags   = ["gke-n8n-node"]
 }

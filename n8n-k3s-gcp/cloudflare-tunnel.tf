@@ -91,12 +91,6 @@ data "cloudflare_zone" "gbone_one" {
 # k8s.gbone.one intentionally omitted — kubectl access will be added in phase 2
 # with a proper Cloudflare Access policy. No public access to preserve in the meantime.
 
-locals {
-  # GCP static external IP — attached to the Traefik LoadBalancer service in GKE.
-  # If a second public ingress IP is ever provisioned, add gcp_public_ingress_ip_002 etc.
-  gcp_public_ingress_ip_001 = "34.105.214.176"
-}
-
 # All services are private — no public DNS records.
 # Access via WARP: Gateway DNS overrides resolve each hostname to Traefik ClusterIP
 # (34.118.228.195), routed through the tunnel to the GKE service CIDR.
