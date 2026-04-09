@@ -105,7 +105,7 @@ resource "kubernetes_deployment" "cloudflared" {
 
           resources {
             requests = {
-              cpu    = "10m"
+              cpu    = "5m"
               memory = "64Mi"
             }
             limits = {
