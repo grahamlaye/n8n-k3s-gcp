@@ -1,2 +1,0 @@
-# Certificates for monitoring services removed — wildcard-cert.yaml in traefik
-# namespace covers *.gbone.one via Traefik TLSStore default.
